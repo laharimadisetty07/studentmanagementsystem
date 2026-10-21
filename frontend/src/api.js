@@ -5,23 +5,21 @@ import axios from "axios";
  * In production (Docker), Nginx proxies /api/* → FastAPI backend.
  * In local dev, set REACT_APP_API_URL=http://localhost:8000
  */
-const isLocal =
-  typeof window !== "undefined" &&
-  (window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1");
+let BASE_URL = "https://student-backend-3070.onrender.com";
 
-const defaultUrl = isLocal
-  ? "/api"
-  : "https://student-backend-3070.onrender.com";
-
-const rawUrl = process.env.REACT_APP_API_URL || defaultUrl;
-const BASE_URL =
-  rawUrl &&
-  !rawUrl.startsWith("/") &&
-  !rawUrl.startsWith("http://") &&
-  !rawUrl.startsWith("https://")
-    ? `https://${rawUrl}`
-    : rawUrl;
+if (typeof window !== "undefined") {
+  const host = window.location.hostname;
+  if (host === "localhost" || host === "127.0.0.1") {
+    BASE_URL = "/api";
+  } else {
+    const envUrl = process.env.REACT_APP_API_URL;
+    if (envUrl && envUrl.includes(".onrender.com")) {
+      BASE_URL = envUrl.startsWith("http") ? envUrl : `https://${envUrl}`;
+    } else {
+      BASE_URL = "https://student-backend-3070.onrender.com";
+    }
+  }
+}
 
 const api = axios.create({
   baseURL: BASE_URL,
