@@ -31,7 +31,6 @@ services:
     name: student-frontend
     runtime: static
     rootDir: frontend
-    plan: free
     buildCommand: npm install --legacy-peer-deps && CI=false npm run build
     staticPublishPath: build
     routes:
