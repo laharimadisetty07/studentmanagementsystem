@@ -39,10 +39,7 @@ services:
         destination: /index.html
     envVars:
       - key: REACT_APP_API_URL
-        fromService:
-          type: web
-          name: student-backend
-          property: host
+        value: https://student-backend-3070.onrender.com
 
 # ─────────────────────────────────────────────────────────────
 # 3. PostgreSQL Database (Render Free Tier)
