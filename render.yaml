@@ -1,0 +1,57 @@
+# ══════════════════════════════════════════════════════════════════
+# Render Blueprint — Student Management System
+# Documentation: https://render.com/docs/blueprint-spec
+# ══════════════════════════════════════════════════════════════════
+
+services:
+  # ─────────────────────────────────────────────────────────────
+  # 1. FastAPI Backend (Web Service)
+  # ─────────────────────────────────────────────────────────────
+  - type: web
+    name: student-backend
+    runtime: python
+    rootDir: backend
+    plan: free
+    region: oregon
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: student-db
+          property: connectionString
+      - key: PYTHON_VERSION
+        value: 3.11.8
+
+  # ─────────────────────────────────────────────────────────────
+  # 2. React Frontend (Static Site)
+  # ─────────────────────────────────────────────────────────────
+  - type: web
+    name: student-frontend
+    runtime: static
+    rootDir: frontend
+    plan: free
+    region: oregon
+    buildCommand: npm install --legacy-peer-deps && CI=false npm run build
+    staticPublishPath: build
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: REACT_APP_API_URL
+        fromService:
+          type: web
+          name: student-backend
+          property: host
+
+# ─────────────────────────────────────────────────────────────
+# 3. PostgreSQL Database (Render Free Tier)
+# ─────────────────────────────────────────────────────────────
+databases:
+  - name: student-db
+    databaseName: studentdb
+    user: postgres
+    plan: free
+    region: oregon

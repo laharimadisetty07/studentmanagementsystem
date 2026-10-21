@@ -1,0 +1,100 @@
+name: student-management
+
+# ════════════════════════════════════════════════════════
+# Docker Compose — Student Management System
+#
+# Services:
+#   db        → PostgreSQL 15
+#   backend   → FastAPI (Python)
+#   frontend  → React built with Vite, served by Nginx
+#
+# Architecture:
+#   Browser → Nginx :8080
+#               ├── /api/* → backend :8000  (internal proxy)
+#               └── /*     → React SPA (static files)
+#
+# Start:   docker compose up --build -d
+# Stop:    docker compose down
+# Reset:   docker compose down -v  (⚠️ deletes DB data)
+# ════════════════════════════════════════════════════════
+
+services:
+
+  # ────────────────────────────────────────────
+  # PostgreSQL Database
+  # ────────────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: student-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: studentdb
+    ports:
+      # Expose 5432 so you can connect with a local DB client (e.g. pgAdmin)
+      # Remove this port mapping if you don't need external DB access
+      - "5432:5432"
+    volumes:
+      # Named volume — data persists across container restarts
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d studentdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - student-net
+
+  # ────────────────────────────────────────────
+  # FastAPI Backend
+  # ────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: student-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/studentdb
+    ports:
+      # Direct access to API docs: http://localhost:8000/docs
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy   # Wait until Postgres passes its healthcheck
+    networks:
+      - student-net
+
+  # ────────────────────────────────────────────
+  # React Frontend (Nginx)
+  # ────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: student-frontend
+    restart: unless-stopped
+    ports:
+      # Frontend: http://localhost:8080
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - student-net
+
+# ────────────────────────────────────────────
+# Volumes
+# ────────────────────────────────────────────
+volumes:
+  postgres_data:
+    name: student-postgres-data
+
+# ────────────────────────────────────────────
+# Networks
+# ────────────────────────────────────────────
+networks:
+  student-net:
+    name: student-network
+    driver: bridge

@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+backend/__pycache__/
+__pycache__/
+*.pyc
+
+# Builds
+build/
+dist/
+
+# Environment and secrets
+.env
+.env.local
+*.pem
+
+# IDE / System
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
