@@ -32,7 +32,6 @@ services:
     runtime: static
     rootDir: frontend
     plan: free
-    region: oregon
     buildCommand: npm install --legacy-peer-deps && CI=false npm run build
     staticPublishPath: build
     routes:
@@ -52,6 +51,6 @@ services:
 databases:
   - name: student-db
     databaseName: studentdb
-    user: postgres
+    user: student_user
     plan: free
     region: oregon
